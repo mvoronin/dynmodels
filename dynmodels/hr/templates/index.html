@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-3">
+            <ul class="nav nav-pills nav-stacked">
+                <li><a href="/admin/" target="_blank">{% trans "Administration" %}</a></li>
+                {% for mdl in models %}
+                    <li><a href="#{{ mdl.lname }}" data-href="{{ mdl.get_list_url }}" data-model="{{ mdl }}">{{ mdl }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-9">
+            <table class="table table-bordered">
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body-tail-js %}
+<script>
+    $(document).ready(function () {
+        $('ul.nav li').on("click", 'a', function (event) {
+            event.preventDefault();
+
+            $.ajax({
+                type: "GET",
+                dataType: "json",
+                url: $(this).attr('data-href'),
+                cache: false
+            })
+            .done(function( data ) {
+                        var head_flag = true;
+                        var $table = $('table > tbody');
+                        $table.html('');
+                        $.each(data.object_list, function( i, item ) {
+                            var $head = $("<tr></tr>");
+                            var $row = $("<tr></tr>");
+                            $.each(item.fields, function(field, value) {
+                                if(head_flag) {$head.append('<th>' + field + '</th>')}
+                                $row.append('<td>' + value + '</td>');
+                            });
+                            if(head_flag) {
+                                $table.append($head);
+                                head_flag = false;
+                            }
+                            $table.append($row);
+                        });
+            });
+        });
+    });
+</script>
+{% endblock %}
