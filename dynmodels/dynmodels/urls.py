@@ -4,6 +4,5 @@ from django.views.generic import RedirectView
 
 urlpatterns = patterns('',
     url(r'^$', RedirectView.as_view(pattern_name='index')),
-    url(r'^dynmodels/', include('hr.urls')),
     url(r'^admin/', include(admin.site.urls)),
 )

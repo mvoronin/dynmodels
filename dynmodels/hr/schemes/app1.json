@@ -1,0 +1,29 @@
+[
+  {
+    "module": "hr",
+    "name": "Department",
+        "fields": [
+          {"name": "name", "title": "Название", "type": "char", "length": 100}
+        ]
+    },
+    {
+        "module": "hr",
+        "name": "Room",
+        "fields": [
+          {"name": "number", "title": "Номер", "type": "char", "length": 5},
+          {"name": "department", "title": "Отдел", "type": "fkey", "ref": "hr.Department"},
+          {"name": "spots", "title": "Вместительность", "type": "int"}
+        ]
+    },
+    {
+        "module": "hr",
+        "name": "Employee",
+        "fields": [
+          {"name": "name", "title": "Имя", "type": "char", "length": 200},
+          {"name": "email", "type": "email"},
+          {"name": "salary", "type": "decimal", "digits": 8, "decimal_places": 2},
+          {"name": "begin_date", "type": "date"},
+          {"name": "department", "type": "fkey", "ref": "hr.Department"}
+        ]
+    }
+]

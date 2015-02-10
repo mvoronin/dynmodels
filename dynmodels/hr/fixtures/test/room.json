@@ -1,0 +1,47 @@
+[
+  {
+    "fields": {
+      "number": "1",
+      "department": 1,
+      "spots": 10
+    },
+    "model": "hr.room",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "number": "2",
+      "department": 2,
+      "spots": 5
+    },
+    "model": "hr.room",
+    "pk": 2
+  },
+  {
+    "fields": {
+      "number": "3",
+      "department": 3,
+      "spots": 20
+    },
+    "model": "hr.room",
+    "pk": 3
+  },
+  {
+    "fields": {
+      "number": "3a",
+      "department": 4,
+      "spots": 17
+    },
+    "model": "hr.room",
+    "pk": 4
+  },
+  {
+    "fields": {
+      "number": "4",
+      "department": 5,
+      "spots": 24
+    },
+    "model": "hr.room",
+    "pk": 5
+  }
+]

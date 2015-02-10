@@ -60,3 +60,56 @@ TEMPLATE_DIRS = (
 FIXTURE_DIRS = (
     os.path.join(BASE_APP_DIR, 'fixtures'),
 )
+APPS_INPUT_FILES = {
+    'hr': os.path.join(BASE_DIR, 'hr/schemes/app1.json'),
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s | %(asctime)s\n'
+                      '%(levelname)s | module: %(module)s function: %(funcName)s\n'
+                      '%(levelname)s | file: %(filename)s line: %(lineno)d\n'
+                      '%(levelname)s | process: %(process)d thread: %(thread)d\n'
+                      '%(levelname)s | %(message)s\n'
+                      '=============================\n'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        }
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
+        }
+    },
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler'
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'hr.views': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        },
+        'hr.mixins': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        }
+    }
+}

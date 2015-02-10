@@ -1,0 +1,57 @@
+[
+  {
+    "fields": {
+      "name": "John Doe",
+      "email": "doe@mail.com",
+      "salary": 50000.00,
+      "begin_date": "2015-01-01",
+      "department": 1
+    },
+    "model": "hr.employee",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "name": "John Galt",
+      "email": "galt@mail.com",
+      "salary": 150000.00,
+      "begin_date": "2015-01-01",
+      "department": 4
+    },
+    "model": "hr.employee",
+    "pk": 2
+  },
+  {
+    "fields": {
+      "name": "Tyler Durden",
+      "email": "fightclub@mail.com",
+      "salary": 104500.00,
+      "begin_date": "2015-01-01",
+      "department": 2
+    },
+    "model": "hr.employee",
+    "pk": 3
+  },
+  {
+    "fields": {
+      "name": "Cornelius Vanderbilt",
+      "email": "vanderbilt@mail.com",
+      "salary": 111000.00,
+      "begin_date": "2015-01-01",
+      "department": 5
+    },
+    "model": "hr.employee",
+    "pk": 4
+  },
+  {
+    "fields": {
+      "name": "Marla Singer",
+      "email": "singer@mail.com",
+      "salary": 152000.00,
+      "begin_date": "2015-01-01",
+      "department": 1
+    },
+    "model": "hr.employee",
+    "pk": 5
+  }
+]

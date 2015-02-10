@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
-
 from django.contrib import admin
-from hr.models import cls_dict_list, get_model_class
+import hr
+from hr.models import get_model_class
 
 
 # {'hr.Employee': EmployeeAdminInline, 'hr.Computer': ComputerAdminInline}
@@ -26,11 +26,10 @@ def get_inline_admin_model_class(cls_dict):
 
 
 def create_inlines():
-    for cls_dict in cls_dict_list:
-        for field_name, field_type in cls_dict['fields'].iteritems():
-            if field_type[:4] == 'fkey':
-                path_fmodel = field_type[5:-1]
-                path_model = cls_dict['module']+'.'+cls_dict['name']
+    for cls_dict in hr.cls_dict_list:
+        for field_dsc in cls_dict['fields']:
+            if field_dsc['type'] == 'fkey':
+                path_fmodel = field_dsc['ref']
                 InlineAdminModelClass = get_inline_admin_model_class(cls_dict)
                 if path_fmodel in dict_model_inlines:
                     inlines = dict_model_inlines[path_fmodel]
@@ -43,7 +42,7 @@ def create_inlines():
 
 create_inlines()
 
-for cls_dict in cls_dict_list:
+for cls_dict in hr.cls_dict_list:
     path_model = cls_dict['module']+'.'+cls_dict['name']
     if path_model in dict_model_inlines:
         inlines = dict_model_inlines[path_model]

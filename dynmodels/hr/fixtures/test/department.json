@@ -1,0 +1,37 @@
+[
+  {
+    "fields": {
+      "name": "HR"
+    },
+    "model": "hr.department",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "name": "Security"
+    },
+    "model": "hr.department",
+    "pk": 2
+  },
+  {
+    "fields": {
+      "name": "Development"
+    },
+    "model": "hr.department",
+    "pk": 3
+  },
+  {
+    "fields": {
+      "name": "Research"
+    },
+    "model": "hr.department",
+    "pk": 4
+  },
+  {
+    "fields": {
+      "name": "Sales"
+    },
+    "model": "hr.department",
+    "pk": 5
+  }
+]
