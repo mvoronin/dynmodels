@@ -9,7 +9,11 @@
             <ul class="nav nav-pills nav-stacked">
                 <li><a href="/admin/" target="_blank">{% trans "Administration" %}</a></li>
                 {% for mdl in models %}
-                    <li><a href="#{{ mdl.lname }}" data-href="{{ mdl.get_list_url }}" data-model="{{ mdl }}">{{ mdl }}</a></li>
+                    <li>
+                        <a href="#{{ mdl.lname }}" data-href="{{ mdl.get_list_url }}"
+                           data-create-url="{{ mdl.get_create_url }}"
+                           data-model="{{ mdl }}">{{ mdl }}</a>
+                    </li>
                 {% endfor %}
             </ul>
         </div>
@@ -23,7 +27,49 @@
 
 {% block body-tail-js %}
 <script>
+
     $(document).ready(function () {
+        var csrftoken = $.cookie('csrftoken');
+
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+
+        $('table').on("click", 'td', function (event) {
+            var $table = $('table');
+            $table.off("click");
+            var value = $(this).text();
+            var model = $table.attr('data-model');
+
+            $(this).html('<form action=""><input name="' + '' + '" value="' + value + '"></form>');
+            $(this).on("focusout", 'input', function (event) {
+                var $form = $($(this).find('form')[0]);
+                $.ajax({
+			        type: 'POST',
+                    url: '/dynmodels/' + model + '/1/update',
+			        data: $form.serialize(),
+			        success: function(data) {
+                        if (data.result == 'ok') {
+                            console.debug('ok');
+                            $(this).off("focusout");
+                            var value = $form.find('input').val();
+                            console.debug(value);
+                        } else {
+                            console.debug(data.errors);
+                        }
+                    }
+                });
+            });
+        });
+
         $('ul.nav li').on("click", 'a', function (event) {
             event.preventDefault();
 
@@ -34,21 +80,24 @@
                 cache: false
             })
             .done(function( data ) {
+                        // console.debug(data);
                         var head_flag = true;
-                        var $table = $('table > tbody');
-                        $table.html('');
+                        var $table = $('table');
+                        var $tbody = $('table > tbody');
+                        $tbody.html('');
+                        $table.attr('data-model', data.model_name);
                         $.each(data.object_list, function( i, item ) {
                             var $head = $("<tr></tr>");
                             var $row = $("<tr></tr>");
                             $.each(item.fields, function(field, value) {
                                 if(head_flag) {$head.append('<th>' + field + '</th>')}
-                                $row.append('<td>' + value + '</td>');
+                                $row.append('<td data-name="' + field + '" data-type="' + data.types_list[field] + '">' + value + '</td>');
                             });
                             if(head_flag) {
-                                $table.append($head);
+                                $tbody.append($head);
                                 head_flag = false;
                             }
-                            $table.append($row);
+                            $tbody.append($row);
                         });
             });
         });

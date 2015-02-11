@@ -8,6 +8,18 @@ from django.views.decorators.http import require_http_methods
 
 logger = logging.getLogger(__name__)
 
+corresp_dict = {
+    'AutoField': 'pk',
+    'ForeignKey': 'fk',
+    'IntegerField': 'int',
+    'FloatField': 'float',
+    'DecimalField': 'decimal',
+    'CharField': 'char',
+    'DateField': 'date',
+    'DateTimeField': 'datetime',
+    'EmailField': 'email'
+}
+
 
 class RequestCheckMixin(object):
 
@@ -25,6 +37,9 @@ class AJAXListMixin(RequestCheckMixin):
         queryset = kwargs.pop('object_list', self.object_list)
         page_size = self.get_paginate_by(queryset)
         context_object_name = self.get_context_object_name(queryset)
+        ftypes = dict()
+        [ftypes.update({f.name: corresp_dict[f.__class__.__name__]}) for f in self.model._meta.fields]
+
         if page_size:
             paginator, page, queryset, is_paginated = self.paginate_queryset(queryset, page_size)
             if context_format == 'object':
@@ -51,7 +66,8 @@ class AJAXListMixin(RequestCheckMixin):
                         'previous_page_number': page.previous_page_number()
                     },
                     'is_paginated': is_paginated,
-                    'object_list': json.loads(serializers.serialize("json", queryset))
+                    'object_list': json.loads(serializers.serialize("json", queryset)),
+                    'types_list': ftypes
                 }
         else:
             if context_format == 'object':
@@ -66,7 +82,9 @@ class AJAXListMixin(RequestCheckMixin):
                     'paginator': None,
                     'page_obj': None,
                     'is_paginated': False,
-                    'object_list': json.loads(serializers.serialize("json", queryset))
+                    'object_list': json.loads(serializers.serialize("json", queryset)),
+                    'model_name': self.model_name.lower(),
+                    'types_list': ftypes
                 }
         if context_format == 'object':
             if context_object_name is not None:

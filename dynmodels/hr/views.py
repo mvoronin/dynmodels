@@ -23,6 +23,7 @@ def get_list_view_class(class_dict, ClassObj):
         (AJAXListMixin, ListView, ),
         {
             'model': ClassObj,
+            'model_name': ClassObj.__name__,
             'allow_empty': True
         }
     )
