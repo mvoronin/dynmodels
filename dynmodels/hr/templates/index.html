@@ -27,14 +27,52 @@
 
 {% block body-tail-js %}
 <script>
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+
+    function submit_form_data($form) {
+        $.ajax({
+            type: 'POST',
+            url: '/dynmodels/' + model + '/' + pk + '/update',
+            data: $form.serialize(),
+            success: function(data) {
+                var response = JSON.parse(data);
+                if (response.result == 'ok') {
+                    $(this).off("focusout");
+                    var value = $input.val();
+                    $td.html(value);
+                } else {
+                    console.debug(response.errors);
+                }
+            }
+        });
+    }
+
+    function bind_form($td, $form) {
+        $(this).on("focusout", 'input', function (event) {
+            submit_form_data($form);
+        });
+    }
+
+    function bind_table($table) {
+        $table.on("click", 'td', function (event) {
+            var $td = $(this);
+            var value = $td.text();
+            var field = $td.attr('data-name');
+            var model = $table.attr('data-model');
+            var pk = $(this).attr('data-pk');
+
+            $table.off("click");
+            $td.html('<form action="."><input id="id_' + field + '" name="' + field + '" value="' + value + '"></form>');
+            bind_form($td, $($td.find('form')[0]));
+        });
+    }
 
     $(document).ready(function () {
         var csrftoken = $.cookie('csrftoken');
 
-        function csrfSafeMethod(method) {
-            // these HTTP methods do not require CSRF protection
-            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-        }
         $.ajaxSetup({
             beforeSend: function(xhr, settings) {
                 if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
@@ -45,25 +83,31 @@
 
         $('table').on("click", 'td', function (event) {
             var $table = $('table');
-            $table.off("click");
+            var $td = $(this);
             var value = $(this).text();
+            var field = $(this).attr('data-name');
             var model = $table.attr('data-model');
+            var pk = $(this).attr('data-pk');
+            $table.off("click");
 
-            $(this).html('<form action=""><input name="' + '' + '" value="' + value + '"></form>');
+            $(this).html('<form action="."><input id="id_' + field + '" name="' + field + '" value="' + value + '"></form>');
             $(this).on("focusout", 'input', function (event) {
-                var $form = $($(this).find('form')[0]);
+                var $form = $($(this).closest('form'));
+                var $input = $(this);
+
                 $.ajax({
 			        type: 'POST',
-                    url: '/dynmodels/' + model + '/1/update',
+                    url: '/dynmodels/' + model + '/' + pk + '/update',
 			        data: $form.serialize(),
 			        success: function(data) {
-                        if (data.result == 'ok') {
-                            console.debug('ok');
+                        var response = JSON.parse(data);
+                        if (response.result == 'ok') {
                             $(this).off("focusout");
-                            var value = $form.find('input').val();
-                            console.debug(value);
+                            var value = $input.val();
+                            $td.html(value);
                         } else {
-                            console.debug(data.errors);
+                            var response = JSON.parse(data);
+                            console.debug(response.errors);
                         }
                     }
                 });
@@ -80,7 +124,6 @@
                 cache: false
             })
             .done(function( data ) {
-                        // console.debug(data);
                         var head_flag = true;
                         var $table = $('table');
                         var $tbody = $('table > tbody');
@@ -91,7 +134,7 @@
                             var $row = $("<tr></tr>");
                             $.each(item.fields, function(field, value) {
                                 if(head_flag) {$head.append('<th>' + field + '</th>')}
-                                $row.append('<td data-name="' + field + '" data-type="' + data.types_list[field] + '">' + value + '</td>');
+                                $row.append('<td data-pk="' + item.pk + '" data-name="' + field + '" data-type="' + data.types_list[field] + '">' + value + '</td>');
                             });
                             if(head_flag) {
                                 $tbody.append($head);

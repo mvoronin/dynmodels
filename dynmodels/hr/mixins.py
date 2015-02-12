@@ -108,6 +108,7 @@ class AJAXListMixin(RequestCheckMixin):
 class AJAXCreateView(RequestCheckMixin):
     def form_valid(self, form):
         if self.request.is_ajax():
+            self.object = form.save()
             return HttpResponse(json.dumps({'result': 'ok'}))
         else:
             return super(AJAXCreateView, self).form_valid(form)
@@ -120,7 +121,12 @@ class AJAXCreateView(RequestCheckMixin):
 
 
 class AJAXUpdateView(AJAXCreateView):
-    pass
+    def get_form_class(self):
+        data = self.request.POST
+        fields_all = self.fields
+        fields_posted = [k for k, v in data.dict().iteritems()]
+        self.fields = filter(lambda x: x if x in fields_posted else None, fields_all)
+        return super(AJAXUpdateView, self).get_form_class()
 
 
 class AJAXDeleteView(RequestCheckMixin):
