@@ -32,41 +32,52 @@
         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     }
 
-    function submit_form_data($form) {
+    function submit_form_data($form, $td, $input) {
         $.ajax({
             type: 'POST',
-            url: '/dynmodels/' + model + '/' + pk + '/update',
+            url: $form.attr('action'),
             data: $form.serialize(),
             success: function(data) {
                 var response = JSON.parse(data);
-                if (response.result == 'ok') {
-                    $(this).off("focusout");
-                    var value = $input.val();
-                    $td.html(value);
-                } else {
-                    console.debug(response.errors);
-                }
+
+                $input.off("focusout");
+                var value = $input.val();
+                $td.html(value);
+
+                bind_table();
             }
         });
     }
 
-    function bind_form($td, $form) {
-        $(this).on("focusout", 'input', function (event) {
-            submit_form_data($form);
+    function bind_form($form, $td, $input) {
+        $form.on( "submit", function(event) {
+            event.preventDefault();
+            submit_form_data($form, $td, $input);
         });
+        $form.on("focusout", 'input', function (event) {
+            submit_form_data($form, $td, $input);
+        });
+
     }
 
-    function bind_table($table) {
+    function bind_table() {
+        var $table = $('table');
+
         $table.on("click", 'td', function (event) {
             var $td = $(this);
             var value = $td.text();
             var field = $td.attr('data-name');
             var model = $table.attr('data-model');
             var pk = $(this).attr('data-pk');
+            var action_url = '/dynmodels/' + model + '/' + pk + '/update';
 
             $table.off("click");
-            $td.html('<form action="."><input id="id_' + field + '" name="' + field + '" value="' + value + '"></form>');
-            bind_form($td, $($td.find('form')[0]));
+            $td.html('<form action="' + action_url + '">' +
+                     '<input id="id_' + field + '" name="' + field + '" value="' + value + '">' +
+                     '</form>');
+            var $form = $($td.find('form')[0]);
+            var $input = $($form.find('input')[0]);
+            bind_form($form, $td, $input);
         });
     }
 
@@ -81,38 +92,7 @@
             }
         });
 
-        $('table').on("click", 'td', function (event) {
-            var $table = $('table');
-            var $td = $(this);
-            var value = $(this).text();
-            var field = $(this).attr('data-name');
-            var model = $table.attr('data-model');
-            var pk = $(this).attr('data-pk');
-            $table.off("click");
-
-            $(this).html('<form action="."><input id="id_' + field + '" name="' + field + '" value="' + value + '"></form>');
-            $(this).on("focusout", 'input', function (event) {
-                var $form = $($(this).closest('form'));
-                var $input = $(this);
-
-                $.ajax({
-			        type: 'POST',
-                    url: '/dynmodels/' + model + '/' + pk + '/update',
-			        data: $form.serialize(),
-			        success: function(data) {
-                        var response = JSON.parse(data);
-                        if (response.result == 'ok') {
-                            $(this).off("focusout");
-                            var value = $input.val();
-                            $td.html(value);
-                        } else {
-                            var response = JSON.parse(data);
-                            console.debug(response.errors);
-                        }
-                    }
-                });
-            });
-        });
+        bind_table();
 
         $('ul.nav li').on("click", 'a', function (event) {
             event.preventDefault();
