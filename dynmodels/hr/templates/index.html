@@ -5,9 +5,12 @@
 
 {% block body %}
     <div class="row">
+        <div class="col-md-12">&nbsp;</div>
+    </div>
+    <div class="row">
         <div class="col-md-3">
+            <a class="btn btn-default" style="display: block" href="/admin/" target="_blank">{% trans "Administration" %}</a>
             <ul class="nav nav-pills nav-stacked">
-                <li><a href="/admin/" target="_blank">{% trans "Administration" %}</a></li>
                 {% for mdl in models %}
                     <li>
                         <a href="#{{ mdl.lname }}" data-href="{{ mdl.get_list_url }}"
@@ -45,23 +48,32 @@
                 $td.html(value);
 
                 bind_table();
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (jqXHR.status == 400) {
+                    var response = JSON.parse(jqXHR.responseText);
+                    // response.
+                }
             }
         });
     }
 
     function bind_form($form, $td, $input) {
+        $form.off( "submit");
         $form.on( "submit", function(event) {
             event.preventDefault();
             submit_form_data($form, $td, $input);
         });
-        $form.on("focusout", 'input', function (event) {
+
+        $td.off("focusout");
+        $td.on("focusout", function (event) {
             submit_form_data($form, $td, $input);
         });
-
     }
 
     function bind_table() {
         var $table = $('table');
+        $table.off("click");
 
         $table.on("click", 'td', function (event) {
             var $td = $(this);
@@ -73,10 +85,13 @@
 
             $table.off("click");
             $td.html('<form action="' + action_url + '">' +
-                     '<input id="id_' + field + '" name="' + field + '" value="' + value + '">' +
+                     '<input id="id_' + field + '" class="form-control" name="' + field + '" value="' + value + '">' +
                      '</form>');
             var $form = $($td.find('form')[0]);
             var $input = $($form.find('input')[0]);
+            if ($td.attr('data-type') == 'date') {
+                $input.datepicker();
+            }
             bind_form($form, $td, $input);
         });
     }
@@ -91,8 +106,6 @@
                 }
             }
         });
-
-        bind_table();
 
         $('ul.nav li').on("click", 'a', function (event) {
             event.preventDefault();
@@ -122,6 +135,7 @@
                             }
                             $tbody.append($row);
                         });
+                        bind_table();
             });
         });
     });
