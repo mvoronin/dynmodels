@@ -10,20 +10,22 @@
     <div class="row">
         <div class="col-md-3">
             <a class="btn btn-default" style="display: block" href="/admin/" target="_blank">{% trans "Administration" %}</a>
+            <br>
             <ul class="nav nav-pills nav-stacked">
                 {% for mdl in models %}
                     <li>
-                        <a href="#{{ mdl.lname }}" data-href="{{ mdl.get_list_url }}"
-                           data-create-url="{{ mdl.get_create_url }}"
-                           data-model="{{ mdl }}">{{ mdl }}</a>
+                        <a href="#{{ mdl.get_class_name }}"
+                           data-href="{{ mdl.get_list_url }}"
+                           data-create-url="{{ mdl.get_create_url }}">{{ mdl.get_class_name }}</a>
                     </li>
                 {% endfor %}
             </ul>
         </div>
         <div class="col-md-9">
-            <table class="table table-bordered">
+            <table id="data-table" class="table table-bordered">
                 <tbody></tbody>
             </table>
+            <div id="wrapper-form"></div>
         </div>
     </div>
 {% endblock %}
@@ -35,16 +37,40 @@
         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     }
 
-    function submit_form_data($form, $td, $input) {
+    function submit_create_form_data($form) {
         $.ajax({
             type: 'POST',
             url: $form.attr('action'),
             data: $form.serialize(),
             success: function(data) {
-                var response = JSON.parse(data);
+                update_data_table();
+                // $form[0].reset();
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (jqXHR.status == 400) {
+                    var response = JSON.parse(jqXHR.responseText);
+                    // console.debug(response.error);
+                    $.each(response.error, function( field, errors ) {
+                        $.each(response.error, function( ind, err ) {
+                            $form.after(err);
+                        });
+                    });
+                }
+            }
+        });
+    }
 
+    function submit_update_form_data($form, $td, $input) {
+        $.ajax({
+            type: 'POST',
+            url: $form.attr('action'),
+            data: $form.serialize(),
+            success: function(data) {
                 $input.off("focusout");
+
+                var response = JSON.parse(data);
                 var value = $input.val();
+
                 $td.html(value);
 
                 bind_table();
@@ -52,27 +78,40 @@
             error: function (jqXHR, textStatus, errorThrown) {
                 if (jqXHR.status == 400) {
                     var response = JSON.parse(jqXHR.responseText);
-                    // response.
+                    // console.debug(response.error);
+                    $.each(response.error, function( field, errors ) {
+                        $.each(response.error, function( ind, err ) {
+                            $input.after(err);
+                        });
+                    });
                 }
             }
         });
     }
 
-    function bind_form($form, $td, $input) {
-        $form.off( "submit");
+    function bind_create_form($form) {
+        $form.off("submit");
+        $form.on("submit", function (event) {
+            event.preventDefault();
+            submit_create_form_data($form);
+        });
+    }
+
+    function bind_update_form($form, $td, $input) {
+        $form.off("submit");
         $form.on( "submit", function(event) {
             event.preventDefault();
-            submit_form_data($form, $td, $input);
+            submit_update_form_data($form, $td, $input);
         });
 
         $td.off("focusout");
         $td.on("focusout", function (event) {
-            submit_form_data($form, $td, $input);
+            submit_update_form_data($form, $td, $input);
         });
     }
 
     function bind_table() {
-        var $table = $('table');
+        var $table = $('table#data-table');
         $table.off("click");
 
         $table.on("click", 'td', function (event) {
@@ -88,12 +127,54 @@
                      '<input id="id_' + field + '" class="form-control" name="' + field + '" value="' + value + '">' +
                      '</form>');
             var $form = $($td.find('form')[0]);
-            var $input = $($form.find('input')[0]);
+            var $input = $($form.find('input#id_' + field)[0]);
+
             if ($td.attr('data-type') == 'date') {
-                $input.datepicker();
+                $input.datepicker({ dateFormat: 'yy-mm-dd' });
             }
-            bind_form($form, $td, $input);
+            bind_update_form($form, $td, $input);
         });
+    }
+
+    function update_data_table() {
+        var $table = $('table#data-table');
+        var url = $($('ul.nav li.active a')[0]).attr('data-href');
+        $.ajax({
+                type: "GET",
+                dataType: "json",
+                url: url,
+                cache: false
+            })
+            .done(function( data ) {
+                    var head_flag = true;
+                    var $tbody = $('table#data-table > tbody');
+                    var $wrform_create = $('#wrapper-form');
+                    var model = data.model_name;
+
+                    $tbody.html('');
+                    $table.attr('data-model', data.model_name);
+                    $.each(data.object_list, function( i, item ) {
+                        var $head = $("<tr></tr>");
+                        var $row = $("<tr></tr>");
+                        $.each(item.fields, function(field, value) {
+                            if(head_flag) {$head.append('<th>' + field + '</th>')}
+                            $row.append('<td data-pk="' + item.pk + '" data-name="' + field + '" data-type="' + data.types_list[field] + '">' + value + '</td>');
+                        });
+                        if(head_flag) {
+                            $tbody.append($head);
+                            head_flag = false;
+                        }
+                        $tbody.append($row);
+                    });
+                    bind_table();
+
+                    $.get( '/dynmodels/' + model + '/create', function( data ) {
+                        $wrform_create.html( data );
+                        var $form = $($wrform_create.find('form')[0]);
+                        $form.attr('action', '/dynmodels/' + model + '/create');
+                        bind_create_form($form);
+                    });
+            });
     }
 
     $(document).ready(function () {
@@ -107,36 +188,13 @@
             }
         });
 
-        $('ul.nav li').on("click", 'a', function (event) {
-            event.preventDefault();
+        var $nav = $('ul.nav');
 
-            $.ajax({
-                type: "GET",
-                dataType: "json",
-                url: $(this).attr('data-href'),
-                cache: false
-            })
-            .done(function( data ) {
-                        var head_flag = true;
-                        var $table = $('table');
-                        var $tbody = $('table > tbody');
-                        $tbody.html('');
-                        $table.attr('data-model', data.model_name);
-                        $.each(data.object_list, function( i, item ) {
-                            var $head = $("<tr></tr>");
-                            var $row = $("<tr></tr>");
-                            $.each(item.fields, function(field, value) {
-                                if(head_flag) {$head.append('<th>' + field + '</th>')}
-                                $row.append('<td data-pk="' + item.pk + '" data-name="' + field + '" data-type="' + data.types_list[field] + '">' + value + '</td>');
-                            });
-                            if(head_flag) {
-                                $tbody.append($head);
-                                head_flag = false;
-                            }
-                            $tbody.append($row);
-                        });
-                        bind_table();
-            });
+        $nav.find('li').on("click", 'a', function (event) {
+            event.preventDefault();
+            $nav.find('li').removeClass("active");
+            $(this).closest('li').addClass("active");
+            update_data_table();
         });
     });
 </script>

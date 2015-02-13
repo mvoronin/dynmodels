@@ -33,16 +33,13 @@ class ModelURLMixin(object):
 
 class ModelBaseMixin(object):
     def __str__(self):
-        return str(self.__class__.__name__)
+        return str("%s %s" % (self.pk, self.__class__.__name__))
 
     def __unicode__(self):
-        return unicode(self.__class__.__name__)
+        return unicode("%s %s" % (self.pk, self.__class__.__name__))
 
-    def name(self):
-        return self.__unicode__()
-
-    def lname(self):
-        return self.__unicode__().lower()
+    def get_class_name(self):
+        return str(self.__class__.__name__)
 
 
 def get_field(field_dsc):

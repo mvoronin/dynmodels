@@ -24,7 +24,8 @@ def get_list_view_class(class_dict, ClassObj):
         {
             'model': ClassObj,
             'model_name': ClassObj.__name__,
-            'allow_empty': True
+            'allow_empty': True,
+            'ordering': 'pk'
         }
     )
     return ViewClass
