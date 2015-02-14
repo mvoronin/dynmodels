@@ -114,7 +114,7 @@
         var $table = $('table#data-table');
         $table.off("click");
 
-        $table.on("click", 'td', function (event) {
+        $table.on("click", 'td.changeable', function (event) {
             var $td = $(this);
             var value = $td.text();
             var field = $td.attr('data-name');
@@ -132,7 +132,25 @@
             if ($td.attr('data-type') == 'date') {
                 $input.datepicker({ dateFormat: 'yy-mm-dd' });
             }
+            $input.focus();
             bind_update_form($form, $td, $input);
+        });
+
+        // binding button "Delete"
+        $table.on("click", 'a.control-delete', function (event) {
+            event.preventDefault();
+            $ctrl_delete = $(this);
+            $.ajax({
+                type: "POST",
+                url: $(this).attr('href'),
+                cache: false,
+                success: function(data) {
+                    $ctrl_delete.closest('tr').remove();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    $ctrl_delete.after('Ошибка');
+                }
+            });
         });
     }
 
@@ -158,8 +176,14 @@
                         var $row = $("<tr></tr>");
                         $.each(item.fields, function(field, value) {
                             if(head_flag) {$head.append('<th>' + field + '</th>')}
-                            $row.append('<td data-pk="' + item.pk + '" data-name="' + field + '" data-type="' + data.types_list[field] + '">' + value + '</td>');
+                            $row.append('<td class="changeable" data-pk="' + item.pk + '" data-name="' + field + '" data-type="' + data.types_list[field] + '">' + value + '</td>');
                         });
+
+                        if(head_flag) {$head.append('<th>Delete</th>')}
+                        $row.append('<td style="text-align:center"><a href="' +
+                                    '/dynmodels/' + model + '/' + item.pk + '/delete' +
+                                    '" class="control-delete"><i class="fa fa-times"></i></a></td>');
+
                         if(head_flag) {
                             $tbody.append($head);
                             head_flag = false;

@@ -4,7 +4,6 @@ import json
 import logging
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseNotAllowed
-from django.views.decorators.http import require_http_methods
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +20,16 @@ corresp_dict = {
 }
 
 
+class GetRequiredMixin(object):
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method not in ['GET']:
+            logger.warning('Method Not Allowed (%s): %s', request.method, request.path,
+                           extra={'status_code': 405, 'request': request})
+            return HttpResponseNotAllowed(['GET'])
+        return super(GetRequiredMixin, self).dispatch(request, *args, **kwargs)
+
+
 class RequestCheckMixin(object):
 
     def dispatch(self, request, *args, **kwargs):
@@ -29,7 +38,7 @@ class RequestCheckMixin(object):
         return super(RequestCheckMixin, self).dispatch(request, *args, **kwargs)
 
 
-class AJAXListMixin(RequestCheckMixin):
+class AJAXListMixin(GetRequiredMixin, RequestCheckMixin):
     def get_context_data(self, context_format='object', **kwargs):
         """
         Get the context for this view.
@@ -106,6 +115,7 @@ class AJAXListMixin(RequestCheckMixin):
 
 
 class AJAXCreateView(RequestCheckMixin):
+
     def form_valid(self, form):
         if self.request.is_ajax():
             self.object = form.save()
@@ -121,6 +131,7 @@ class AJAXCreateView(RequestCheckMixin):
 
 
 class AJAXUpdateView(AJAXCreateView):
+
     def get_form_class(self):
         data = self.request.POST
         fields_all = self.fields
