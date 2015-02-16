@@ -41,6 +41,10 @@
     }
 
     function submit_create_form_data($form) {
+        $.each($form.find('.field-errors'), function( ind, err_list ) {
+            $(err_list).text('');
+        });
+
         $.ajax({
             type: 'POST',
             url: $form.attr('action'),
@@ -52,11 +56,8 @@
             error: function (jqXHR, textStatus, errorThrown) {
                 if (jqXHR.status == 400) {
                     var response = JSON.parse(jqXHR.responseText);
-                    // console.debug(response.error);
                     $.each(response.error, function( field, errors ) {
-                        $.each(response.error, function( ind, err ) {
-                            $form.after(err);
-                        });
+                        $($($form.find('#id_' + field)[0]).parent().find('.field-errors')[0]).text(errors);
                     });
                 }
                 if (jqXHR.status == 403) {
@@ -73,11 +74,9 @@
             type: 'POST',
             url: $form.attr('action'),
             data: $form.serialize(),
-            beforeSend: function() {
-                $errors.text('');
-            },
             success: function(data) {
-                $input.off("focusout");
+                $td.off("focusout");
+                $errors.text('');
 
                 var response = JSON.parse(data);
                 var value = $input.val();
@@ -87,13 +86,13 @@
                 bind_table();
             },
             error: function (jqXHR, textStatus, errorThrown) {
+                $errors.text('');
+
                 if (jqXHR.status == 400) {
                     var response = JSON.parse(jqXHR.responseText);
-                    // console.debug(response.error);
                     $.each(response.error, function( field, errors ) {
                         $.each(response.error, function( ind, err ) {
-                            // $input.after(err);
-                            $errors.append(err);
+                            $errors.append(err + ' ');
                         });
                     });
                 }

@@ -48,7 +48,7 @@ def get_create_view_class(class_dict, ClassObj):
         (AJAXCreateView, CreateView, ),
         {
             'model': ClassObj,
-            'template_name': "form.html",
+            'template_name': "include/form.html",
             'success_url': reverse_lazy('index'),
             'fields': [x['name'] for x in class_dict['fields']]
         }
